@@ -6,11 +6,11 @@
 
 ### External jar libraries
 
-\lib
+lib_1
 *.jar
 
 ### Scala template
-*.class
+
 *.log
 *.sc
 
@@ -22,31 +22,12 @@ src_managed/
 project/boot/
 project/target/
 .cache
+.history
 
 ### Mac OSX
 
 .DS_Store
 .AppleDouble
 .LSOverride
-
-# Icon must end with two \r
-Icon
-
-# Thumbnails
-._*
-
-# Files that might appear in the root of a volume
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
 .Trashes
-.VolumeIcon.icns
-
-# Directories potentially created on remote AFP share
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk
 

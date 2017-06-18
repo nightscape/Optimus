@@ -1,36 +1,54 @@
-import sbt.Keys._
 import sbt._
+import sbt.Keys._
+import sbt.plugins.JvmPlugin
+import com.typesafe.sbt.SbtNativePackager.Universal
+import com.typesafe.sbt.SbtNativePackager.autoImport._
+import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
 
-object OptimusBuild {
+object OptimusBuild extends AutoPlugin {
 
-  val javaVersion = sys.props("java.specification.version").toDouble
+  println {
+    """
+      |   /\\\\\
+      |  /\\\///\\\
+      | /\\\/  \///\\\    /\\\\\\\\\     /\\\       /\\\
+      | /\\\      \//\\\  /\\\/////\\\ /\\\\\\\\\\\ \///    /\\\\\  /\\\\\     /\\\    /\\\  /\\\\\\\\\\
+      | \/\\\       \/\\\ \/\\\\\\\\\\ \////\\\////   /\\\  /\\\///\\\\\///\\\ \/\\\   \/\\\ \/\\\//////
+      |  \//\\\      /\\\  \/\\\//////     \/\\\      \/\\\ \/\\\ \//\\\  \/\\\ \/\\\   \/\\\ \/\\\\\\\\\\
+      |    \///\\\  /\\\    \/\\\           \/\\\_/\\  \/\\\ \/\\\  \/\\\  \/\\\ \/\\\   \/\\\ \////////\\\
+      |       \///\\\\\/     \/\\\           \//\\\\\   \/\\\ \/\\\  \/\\\  \/\\\ \//\\\\\\\\\  /\\\\\\\\\\
+      |          \/////       \///             \/////    \///  \///   \///   \///  \/////////   \//////////
+    """.stripMargin
+  }
 
-  lazy val settings: Seq[Setting[_]] = {
+  override def requires: Plugins = JvmPlugin && JavaAppPackaging
+  override def trigger: PluginTrigger = allRequirements
 
-    println(s"[info] Loading settings for Java $javaVersion or higher.")
-    commonSettings ++ jdkSettings
+  override def projectSettings: Seq[Setting[_]] = settings
+
+  val javaVersion: Double = sys.props("java.specification.version").toDouble
+
+  private lazy val settings: Seq[Setting[_]] = {
+    if (javaVersion < 1.8)
+      sys.error("Java 8 or higher is required for building Optimus.")
+    else {
+      println(s"[info] Loading settings for Java $javaVersion or higher.")
+      commonSettings ++ ScalaSettings ++ JavaSettings ++ PackagingOptions
+    }
   }
 
   private val commonSettings: Seq[Setting[_]] = Seq(
 
     name := "Optimus",
-
-    version := "2.0.1",
-
     organization := "com.github.vagmcs",
-
     description := "Optimus is a mathematical programming library for Scala",
-
     scalaVersion := "2.11.8",
 
     autoScalaLibrary := true,
-
     managedScalaInstance := true,
 
     publishMavenStyle := true,
-
     publishArtifact in Test := false,
-
     pomIncludeRepository := { _ => false },
 
     // fork a new JVM for 'run' and 'test:run'
@@ -44,8 +62,22 @@ object OptimusBuild {
 
     resolvers ++= Seq(
       Resolver.mavenLocal,
-      "typesafe" at "http://repo.typesafe.com/typesafe/releases/",
-      "sonatype-oss-public" at "https://oss.sonatype.org/content/groups/public/"),
+      Resolver.typesafeRepo("releases"),
+      Resolver.sonatypeRepo("releases"),
+      Resolver.sonatypeRepo("snapshots")
+    ),
+
+    libraryDependencies ++= Seq(
+      "org.scala-lang" % "scala-library" % scalaVersion.value,
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value
+    ),
+
+    dependencyOverrides ++= Set(
+      "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+      "org.scala-lang" % "scala-library" % scalaVersion.value,
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      "org.scala-lang.modules" %% "scala-xml" % "1.0.5"
+    ),
 
     publishTo := {
       val nexus = "https://oss.sonatype.org/"
@@ -83,10 +115,31 @@ object OptimusBuild {
       </developers>
   )
 
-  private lazy val jdkSettings: Seq[Setting[_]] = Seq(
+  private lazy val PackagingOptions: Seq[Setting[_]] = Seq(
 
+    // Include logger configuration file to the final distribution
+    mappings in Universal ++= {
+      val scriptsDir = file("core/src/main/resources/")
+      scriptsDir.listFiles.toSeq.map { f =>
+        f -> ("etc/" + f.getName)
+      }
+    },
+
+    // File name of the universal distribution
+    packageName in Universal := s"${name.value}-${version.value}"
+  )
+
+  private lazy val JavaSettings: Seq[Setting[_]] = Seq(
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint:unchecked", "-Xlint:deprecation"),
 
+    javaOptions ++= Seq(
+      "-XX:+DoEscapeAnalysis",
+      "-XX:+UseFastAccessorMethods",
+      "-XX:+OptimizeStringConcat",
+      "-Dlogback.configurationFile=src/main/resources/logback.xml")
+  )
+
+  private lazy val ScalaSettings: Seq[Setting[_]] = Seq(
     scalacOptions ++= Seq(
       "-Yclosure-elim",
       "-Yinline",
@@ -96,5 +149,4 @@ object OptimusBuild {
       "-Ybackend:GenBCode"
     )
   )
-
 }
