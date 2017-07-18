@@ -1,8 +1,3 @@
-package optimus
-
-import gnu.trove.map.hash.TLongDoubleHashMap
-import gnu.trove.procedure.TLongDoubleProcedure
-
 /*
  *    /\\\\\
  *   /\\\///\\\
@@ -30,14 +25,74 @@ import gnu.trove.procedure.TLongDoubleProcedure
  * along with this program. If not, see <http://www.gnu.org/licenses/lgpl-3.0.en.html>.
  */
 
-/**
-  * Helper functions for summation of multiple expressions
-  * stored in iterable data structures and encoding/decoding of terms.
-  */
+package optimus
+
+import gnu.trove.map.hash.TLongDoubleHashMap
+import gnu.trove.procedure.TLongDoubleProcedure
+
 package object algebra {
+
+  // Anonymous constant for variables not having a symbol.
+  final val ANONYMOUS = ""
 
   type UniqueId = Long
   type DecodedIds = Vector[Int]
+  type LongDoubleMap = TLongDoubleHashMap
+
+  private[algebra] object LongDoubleMap {
+
+    /**
+      * @see [[gnu.trove.map.hash.TLongDoubleHashMap]]
+      * @return a vacant TLongDoubleHashMap
+      */
+    def empty: LongDoubleMap = new TLongDoubleHashMap()
+
+    /**
+      * @see [[gnu.trove.map.hash.TLongDoubleHashMap]]
+      * @param key an encoded vector of variables
+      * @param value a scalar value
+      * @return a TLongDoubleHashMap holding a single mapping
+      */
+    def apply(key: Long, value: Double): LongDoubleMap =
+      new TLongDoubleHashMap(Array(key), Array(value))
+
+    /**
+      * @see [[gnu.trove.map.hash.TLongDoubleHashMap]]
+      * @param keys an array of encoded vector variables
+      * @param values an array of scalar values
+      * @return a TLongDoubleHashMap holding the given mappings
+      */
+    def apply(keys: Array[Long], values: Array[Double]): LongDoubleMap =
+      new TLongDoubleHashMap(keys, values)
+
+    /**
+      * @see [[gnu.trove.map.hash.TLongDoubleHashMap]]
+      * @param map a TLongDoubleHashMap
+      * @return a TLongDoubleHashMap holding the mappings
+      *         of the given TLongDoubleHashMap
+      */
+    def apply(map: LongDoubleMap): LongDoubleMap =
+      new TLongDoubleHashMap(map)
+
+    /**
+      * @see [[gnu.trove.map.hash.TLongDoubleHashMap]]
+      * @param v a variable
+      * @return a TLongDoubleHashMap holding a mapping of the
+      *         encoded variable to scalar 1
+      */
+    def apply(v: Var): LongDoubleMap =
+      apply(encode(v.index), 1)
+
+    /**
+      * @see [[gnu.trove.map.hash.TLongDoubleHashMap]]
+      * @param scalar a scalar
+      * @param vars a vector of variables
+      * @return a TLongDoubleHashMap holding a mapping of the
+      *         encoded variables to the scalar
+      */
+    def apply(scalar: Const, vars: Vector[Var]): LongDoubleMap =
+      apply(encode(vars), scalar.value)
+  }
 
   /**
     * Szudzik pairing function is a process for uniquely encoding a pair of natural
@@ -74,7 +129,7 @@ package object algebra {
     * @param vars a vector of variables
     * @return a unique ID in the space of encodings for the variables
     */
-  def encode(vars: Vector[Variable]): UniqueId = {
+  def encode(vars: Vector[Var]): UniqueId = {
     if (vars.size == 1) encode(vars.head.index)
     else encode(vars.head.index, vars.last.index)
   }

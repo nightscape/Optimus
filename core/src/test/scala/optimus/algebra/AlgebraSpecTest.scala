@@ -59,7 +59,7 @@ final class AlgebraSpecTest extends FunSpec with Matchers {
     }
 
     it("Variable p is integer and should have domain {5...9}") {
-      p.symbol shouldEqual Variable.ANONYMOUS
+      p.symbol shouldEqual ANONYMOUS
       p.lowerBound shouldEqual 5
       p.upperBound shouldEqual 9
       p.isInteger shouldEqual true
