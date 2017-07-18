@@ -36,34 +36,64 @@ import gnu.trove.procedure.TLongDoubleProcedure
   */
 package object algebra {
 
+  type UniqueId = Long
+  type DecodedIds = Vector[Int]
+
   /**
-    * Cantor pairing function. A process to uniquely encode natural numbers
-    * into a single natural number.
+    * Szudzik pairing function is a process for uniquely encoding a pair of natural
+    * numbers into a single natural number. It is used by algebra to encode variable
+    * products by ID and produce unique product IDs.
     *
-    * @param x the first number
-    * @param y the second number (default is -1 in case we want to encode only one)
-    * @return a unique number for x and y
+    * @note This variant encodes a variable ID alone.
+    *
+    * @param x a variable ID
+    * @return a unique ID in the space of encodings for a single variable ID
     */
-  def encode(x: Int, y: Int = -1): Long = {
-    val xm: Long = 2 * x
-    val ym: Long = if(y == -1) 1 else 2 * y
-    val w = xm + ym
-    (w * (w + 1) / 2) + ym
+  def encode(x: Long): UniqueId = encode(x, x)
+
+  /**
+    * Szudzik pairing function is a process that uniquely encodes a pair of natural
+    * numbers into a single natural number. It is used by algebra to encode variable
+    * products by ID and produce unique product IDs.
+    *
+    * @param x a variable ID
+    * @param y another variable ID
+    * @return a unique ID in the space of encodings for x and y
+    */
+  def encode(x: Long, y: Long): UniqueId =
+    if (x < y) y * y + x else x * x + y
+
+  /**
+    * Szudzik pairing function is a process for uniquely encoding a pair of natural
+    * numbers into a single natural number. It is used by algebra to encode variable
+    * products by ID and produce unique product IDs.
+    *
+    * @note This variant encodes a vector of variables. The vector should contain
+    *       a single variable or a pair of variables.
+    *
+    * @param vars a vector of variables
+    * @return a unique ID in the space of encodings for the variables
+    */
+  def encode(vars: Vector[Variable]): UniqueId = {
+    if (vars.size == 1) encode(vars.head.index)
+    else encode(vars.head.index, vars.last.index)
   }
 
   /**
-    * Cantor inverse pairing function. Uniquely decodes a number into a sequence of
-    * natural numbers they produced it.
+    * Szudzik inverse pairing function. Uniquely decodes a natural
+    * number encoding into the pair of natural numbers that produced
+    * the encoding.
+    *
+    * @note In case the encoding refers to a single variable the vector
+    *       will contain only
     *
     * @param z the number to decode
-    * @return a pair of numbers or one number if default value was used during encoding
+    * @return a vector holding the pair of numbers
     */
-  def decode(z: Long): Vector[Int] = {
-    val w = Math.floor( (-1D + Math.sqrt(1D + 8 * z)) / 2D)
-    val x = (w * (w + 3) / 2 - z) / 2
-    val y = z - w * (w + 1) / 2
-    if(y == 1) Vector(x.toInt)
-    else Vector(x.toInt, y.toInt / 2)
+  def decode(z: UniqueId): DecodedIds = {
+    val q = math.floor(math.sqrt(z))
+    val l = z - q * q
+    Vector(l.toInt, q.toInt).distinct
   }
 
   // Functions over iterable data structures of expressions

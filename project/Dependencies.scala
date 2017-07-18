@@ -5,7 +5,8 @@ object Dependencies {
   final val LogbackVersion = "1.1.7"
   final val SLF4JVersion = "1.7.21"
   final val ScalaLogging = "3.5.0"
-  final val ScalaTestVersion = "2.2.6"
+  final val ScalaTestVersion = "3.0.1"
+  final val ScalaCheckVersion = "1.13.4"
   final val ScalaMeterVersion = "0.8.2"
   final val LpSolveVersion = "5.5.2.0"
   final val ojAlgorithmsVersion = "43.0"
@@ -21,6 +22,7 @@ object Dependencies {
   // ScalaTest and ScalaMeter for UNIT testing
   lazy val ScalaTest = Seq(
     "org.scalatest" %% "scalatest" % ScalaTestVersion % "test",
+    "org.scalacheck" %% "scalacheck" % ScalaCheckVersion % "test",
     "com.storm-enroute" %% "scalameter" % ScalaMeterVersion % "test"
   )
 

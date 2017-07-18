@@ -57,7 +57,7 @@ lazy val gurobi = if (file("lib/gurobi.jar").exists)
     .settings(unmanagedJars in Compile += file("lib/gurobi.jar"))
 else
   Project("solver-gurobi", file("solver-gurobi"))
-    .settings(unmanagedSourceDirectories in Compile <<= (scalaSource in Compile)( _ :: Nil))
+    //.settings(unmanagedSourceDirectories in Compile <<= (scalaSource in Compile)( _ :: Nil))
     .settings({
     println(s"[warn] Building in the absence of support for the Gurobi solver " +
             s"[ 'gurobi.jar' not found in 'lib' directory ].")
